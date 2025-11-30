@@ -5,12 +5,16 @@ from datetime import datetime
 
 def scheduler_loop():
     while True:
-        db = SessionLocal()
-        now = datetime.now().isoformat()
-        due = crud.get_due_reminders(db, now)
-        #will eventually mark due + log events
-        db.close()
-        time.sleep(60)
+        try:
+            db = SessionLocal()
+            now = datetime.now().isoformat()
+            due_list = crud.get_due_reminders(db, now)
+            for reminder in due_list:
+                crud.mark_due(db, reminder)
+            db.close()
+        except Exception as e:
+            print("Scheduler error:", e)
+        time.sleep(60)#run every min
 
 def start_scheduler():
     thread = threading.Thread(target=scheduler_loop, daemon=True)
